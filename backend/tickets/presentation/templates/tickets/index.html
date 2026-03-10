@@ -1,45 +1,148 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket Manager</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 48px 64px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        h1 { font-size: 2rem; color: #1a1a1a; margin-bottom: 8px; }
-        p  { color: #666; font-size: 1rem; }
-        .badge {
-            display: inline-block;
-            margin-top: 24px;
-            padding: 4px 12px;
-            background: #e8f5e9;
-            color: #2e7d32;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Ticket Manager</h1>
-        <p>Sistema de gerenciamento de tickets</p>
-        <span class="badge">Hello World</span>
+{% extends "tickets/base.html" %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Tickets</span>
+    <a href="{% url 'ticket_create' %}" class="btn btn-primary">+ Novo Ticket</a>
+  </div>
+
+  {% if tickets %}
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Cliente</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ticket in tickets %}
+      <tr>
+        <td class="uuid-cell" title="{{ ticket.id }}">{{ ticket.id|slice:":8" }}…</td>
+        <td>{{ ticket.titulo }}</td>
+        <td>{{ ticket.cliente.nome }}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-secondary btn-sm"
+                    onclick="abrirDetalhe('{{ ticket.id }}')">
+              Detalhe
+            </button>
+            <a href="{% url 'ticket_edit' ticket.id %}"
+               class="btn btn-warning btn-sm">
+              Editar
+            </a>
+            <button class="btn btn-danger btn-sm"
+                    onclick="confirmarExclusao('{{ ticket.id }}', '{{ ticket.titulo|escapejs }}')">
+              Excluir
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">Nenhum ticket cadastrado. Clique em "Novo Ticket" para começar.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+
+<!-- Modal: Detalhe do Ticket -->
+<div class="modal-overlay" id="modalDetalhe">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('modalDetalhe')">&times;</button>
+    <div class="modal-title">Detalhes do Ticket</div>
+    <div class="detail-grid" id="detalheConteudo">
+      <span class="detail-label">Carregando…</span>
     </div>
-</body>
-</html>
+  </div>
+</div>
+
+<!-- Modal: Confirmação de Exclusão -->
+<div class="modal-overlay" id="modalExclusao">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('modalExclusao')">&times;</button>
+    <div class="modal-title">Confirmar Exclusão</div>
+    <p style="font-size:.9rem; color:#475569;">
+      Tem certeza que deseja excluir o ticket
+      <strong id="tituloExclusao"></strong>?
+      Esta ação não pode ser desfeita.
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modalExclusao')">Não</button>
+      <form id="formExclusao" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, excluir</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function abrirModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+
+  function fecharModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) fecharModal(this.id);
+    });
+  });
+
+  function statusBadge(status) {
+    const map = { 'Novo': 'badge-novo', 'Em Andamento': 'badge-andamento', 'Resolvido': 'badge-resolvido' };
+    return `<span class="badge ${map[status] || ''}">${status}</span>`;
+  }
+
+  function prioridadeBadge(prioridade) {
+    const map = { 'Baixa': 'badge-baixa', 'Média': 'badge-media', 'Alta': 'badge-alta' };
+    return `<span class="badge ${map[prioridade] || ''}">${prioridade}</span>`;
+  }
+
+  function abrirDetalhe(ticketId) {
+    const conteudo = document.getElementById('detalheConteudo');
+    conteudo.innerHTML = '<span class="detail-label">Carregando…</span>';
+    abrirModal('modalDetalhe');
+
+    fetch(`/tickets/${ticketId}/detalhe/`)
+      .then(r => r.json())
+      .then(d => {
+        conteudo.innerHTML = `
+          <span class="detail-label">ID</span>
+          <span class="detail-value" style="font-family:monospace;font-size:.8rem">${d.id}</span>
+          <span class="detail-label">Título</span>
+          <span class="detail-value">${d.titulo}</span>
+          <span class="detail-label">Cliente</span>
+          <span class="detail-value">${d.cliente}</span>
+          <span class="detail-label">Status</span>
+          <span class="detail-value">${statusBadge(d.status)}</span>
+          <span class="detail-label">Prioridade</span>
+          <span class="detail-value">${prioridadeBadge(d.prioridade)}</span>
+          <span class="detail-label">Descrição</span>
+          <span class="detail-value">${d.descricao || '<em style="color:#94a3b8">Sem descrição</em>'}</span>
+          <span class="detail-label">Criado em</span>
+          <span class="detail-value">${d.criado_em}</span>
+          <span class="detail-label">Atualizado em</span>
+          <span class="detail-value">${d.atualizado_em}</span>
+        `;
+      })
+      .catch(() => {
+        conteudo.innerHTML = '<span style="color:#dc2626">Erro ao carregar dados.</span>';
+      });
+  }
+
+  function confirmarExclusao(ticketId, titulo) {
+    document.getElementById('tituloExclusao').textContent = titulo;
+    document.getElementById('formExclusao').action = `/tickets/${ticketId}/excluir/`;
+    abrirModal('modalExclusao');
+  }
+</script>
+{% endblock %}

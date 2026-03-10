@@ -1,0 +1,76 @@
+{% extends "tickets/base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 680px; margin: 0 auto;">
+  <div class="card-header">
+    <span class="card-title">{{ titulo_pagina }}</span>
+  </div>
+
+  {% if erro %}
+  <div class="alert alert-error">{{ erro }}</div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="titulo">Título *</label>
+      <input type="text" id="titulo" name="titulo" required
+             value="{{ ticket.titulo|default:'' }}">
+    </div>
+
+    <div class="form-group">
+      <label for="cliente_id">Cliente *</label>
+      <select id="cliente_id" name="cliente_id" required>
+        <option value="">Selecione um cliente…</option>
+        {% for cliente in clientes %}
+        <option value="{{ cliente.id }}"
+          {% if ticket.cliente_id == cliente.id %}selected{% endif %}>
+          {{ cliente.nome }} ({{ cliente.email }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="status">Status *</label>
+        <select id="status" name="status" required>
+          {% for value, label in status_choices %}
+          <option value="{{ value }}"
+            {% if ticket.status == value %}selected
+            {% elif not ticket and value == 'Novo' %}selected
+            {% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="prioridade">Prioridade *</label>
+        <select id="prioridade" name="prioridade" required>
+          {% for value, label in prioridade_choices %}
+          <option value="{{ value }}"
+            {% if ticket.prioridade == value %}selected
+            {% elif not ticket and value == 'Baixa' %}selected
+            {% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="descricao">Descrição</label>
+      <textarea id="descricao" name="descricao">{{ ticket.descricao|default:'' }}</textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <a href="{% url 'ticket_list' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
