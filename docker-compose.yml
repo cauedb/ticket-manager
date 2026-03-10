@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - sqlite_data:/app/db.sqlite3
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+
+volumes:
+  sqlite_data:
