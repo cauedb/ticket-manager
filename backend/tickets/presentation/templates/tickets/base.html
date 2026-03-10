@@ -25,6 +25,21 @@
       justify-content: space-between;
     }
     header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: .3px; }
+    .header-user { display: flex; align-items: center; gap: 14px; font-size: .85rem; }
+    .header-user span { opacity: .85; }
+    .btn-logout {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.3);
+      padding: 5px 14px;
+      border-radius: 5px;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.25); }
 
     /* ---------- Main ---------- */
     main { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
@@ -196,6 +211,15 @@
 
 <header>
   <h1>Ticket Manager</h1>
+  {% if user.is_authenticated %}
+  <div class="header-user">
+    <span>{{ user.get_full_name|default:user.username }}</span>
+    <form method="post" action="{% url 'logout' %}" style="margin:0">
+      {% csrf_token %}
+      <button type="submit" class="btn-logout">Sair</button>
+    </form>
+  </div>
+  {% endif %}
 </header>
 
 <main>
