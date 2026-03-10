@@ -15,6 +15,6 @@ class ClienteAdmin(admin.ModelAdmin):
 class TicketAdmin(admin.ModelAdmin):
     list_display = ("titulo", "cliente", "status", "prioridade", "criado_em")
     list_filter = ("status", "prioridade")
-    search_fields = ("titulo", "cliente__nome")
+    search_fields = ("titulo", "cliente__email")
     ordering = ("-criado_em",)
     readonly_fields = ("criado_em", "atualizado_em")
