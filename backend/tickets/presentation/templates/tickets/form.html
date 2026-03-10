@@ -21,15 +21,19 @@
 
     <div class="form-group">
       <label for="cliente_id">Cliente *</label>
-      <select id="cliente_id" name="cliente_id" required>
-        <option value="">Selecione um cliente…</option>
-        {% for cliente in clientes %}
-        <option value="{{ cliente.id }}"
-          {% if ticket.cliente_id == cliente.id %}selected{% endif %}>
-          {{ cliente.nome }} ({{ cliente.email }})
-        </option>
-        {% endfor %}
-      </select>
+      {% if ticket %}
+        <input type="text" value="{{ ticket.cliente.nome }} ({{ ticket.cliente.email }})" disabled
+               style="background:#f8fafc; color:#64748b; cursor:not-allowed;">
+      {% else %}
+        <select id="cliente_id" name="cliente_id" required>
+          <option value="">Selecione um cliente…</option>
+          {% for cliente in clientes %}
+          <option value="{{ cliente.id }}">
+            {{ cliente.nome }} ({{ cliente.email }})
+          </option>
+          {% endfor %}
+        </select>
+      {% endif %}
     </div>
 
     <div class="form-row">

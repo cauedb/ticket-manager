@@ -66,8 +66,6 @@ def ticket_create(request):
 
 
 def ticket_edit(request, ticket_id):
-    clientes = service.listar_clientes_ativos()
-
     try:
         ticket = service.obter_ticket(ticket_id)
     except TicketNaoEncontrado:
@@ -76,7 +74,6 @@ def ticket_edit(request, ticket_id):
     if request.method == "GET":
         return render(request, "tickets/form.html", {
             "ticket": ticket,
-            "clientes": clientes,
             "status_choices": Ticket.Status.choices,
             "prioridade_choices": Ticket.Prioridade.choices,
             "titulo_pagina": "Editar Ticket",
@@ -86,15 +83,13 @@ def ticket_edit(request, ticket_id):
         service.atualizar_ticket(
             ticket_id=ticket_id,
             titulo=request.POST.get("titulo", "").strip(),
-            cliente_id=request.POST.get("cliente_id"),
             status=request.POST.get("status"),
             prioridade=request.POST.get("prioridade"),
             descricao=request.POST.get("descricao", "").strip(),
         )
-    except (TicketNaoEncontrado, ClienteNaoEncontrado) as e:
+    except TicketNaoEncontrado as e:
         return render(request, "tickets/form.html", {
             "ticket": ticket,
-            "clientes": clientes,
             "status_choices": Ticket.Status.choices,
             "prioridade_choices": Ticket.Prioridade.choices,
             "titulo_pagina": "Editar Ticket",

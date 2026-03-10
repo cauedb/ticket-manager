@@ -42,15 +42,12 @@ class TicketService:
             descricao=descricao,
         )
 
-    def atualizar_ticket(self, ticket_id, titulo: str, cliente_id, status: str, prioridade: str, descricao: str = "") -> Ticket:
-        # garante que o ticket existe
+    def atualizar_ticket(self, ticket_id, titulo: str, status: str, prioridade: str, descricao: str = "") -> Ticket:
+        # garante que o ticket existe; cliente não pode ser alterado após criação
         self.obter_ticket(ticket_id)
-        # garante que o cliente existe
-        self.obter_cliente(cliente_id)
         return self.tickets.update(
             ticket_id=ticket_id,
             titulo=titulo,
-            cliente_id=cliente_id,
             status=status,
             prioridade=prioridade,
             descricao=descricao,

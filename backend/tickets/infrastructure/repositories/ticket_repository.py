@@ -21,7 +21,7 @@ class TicketRepository:
             cliente_id=cliente_id,
         )
 
-    def update(self, ticket_id, titulo: str, cliente_id, status: str, prioridade: str, descricao: str = "") -> Ticket | None:
+    def update(self, ticket_id, titulo: str, status: str, prioridade: str, descricao: str = "") -> Ticket | None:
         ticket = self.get_by_id(ticket_id)
         if ticket is None:
             return None
@@ -29,7 +29,6 @@ class TicketRepository:
         ticket.descricao = descricao
         ticket.status = status
         ticket.prioridade = prioridade
-        ticket.cliente_id = cliente_id
         ticket.save()
         return ticket
 
