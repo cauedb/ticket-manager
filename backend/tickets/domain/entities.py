@@ -16,11 +16,6 @@ class TicketPrioridade(str, Enum):
     ALTA = "Alta"
 
 
-class TipoUsuario(str, Enum):
-    ADMIN = "Admin"
-    AGENTE = "Agente"
-
-
 @dataclass
 class ClienteEntity:
     nome: str
@@ -41,11 +36,3 @@ class TicketEntity:
     atualizado_em: datetime = field(default_factory=datetime.now)
 
 
-@dataclass
-class UsuarioEntity:
-    nome: str
-    email: str
-    tipo: TipoUsuario = TipoUsuario.AGENTE
-    id: UUID = field(default_factory=uuid4)
-    criado_em: datetime = field(default_factory=datetime.now)
-    atualizado_em: datetime = field(default_factory=datetime.now)

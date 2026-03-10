@@ -6,9 +6,5 @@ class TicketNaoEncontrado(Exception):
     pass
 
 
-class UsuarioNaoEncontrado(Exception):
-    pass
-
-
 class EmailJaCadastrado(Exception):
     pass

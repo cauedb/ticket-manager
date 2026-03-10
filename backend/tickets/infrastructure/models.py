@@ -1,6 +1,5 @@
 import uuid
 
-from django.contrib.auth.hashers import make_password
 from django.db import models
 
 
@@ -53,29 +52,3 @@ class Ticket(models.Model):
     def __str__(self) -> str:
         return self.titulo
 
-
-class Usuario(models.Model):
-    class Tipo(models.TextChoices):
-        ADMIN = "Admin", "Admin"
-        AGENTE = "Agente", "Agente"
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    nome = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
-    senha = models.CharField(max_length=255)
-    tipo = models.CharField(
-        max_length=10, choices=Tipo.choices, default=Tipo.AGENTE
-    )
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    def set_senha(self, senha_plana: str) -> None:
-        self.senha = make_password(senha_plana)
-
-    class Meta:
-        verbose_name = "Usuário"
-        verbose_name_plural = "Usuários"
-        db_table = "usuarios"
-
-    def __str__(self) -> str:
-        return self.nome
