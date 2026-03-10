@@ -146,6 +146,34 @@ class TestTicketCreate:
         assert response.status_code == 200
         assert "Cliente selecionado" in response.content.decode()
 
+    def test_post_com_titulo_vazio_retorna_formulario_com_erro(self, cliente_autenticado, cliente_db):
+        response = cliente_autenticado.post(
+            reverse("ticket_create"),
+            {
+                "titulo": "",
+                "cliente_id": str(cliente_db.id),
+                "status": "Novo",
+                "prioridade": "Baixa",
+            },
+        )
+        assert response.status_code == 200
+        assert "título" in response.content.decode()
+        assert not Ticket.objects.exists()
+
+    def test_post_com_status_invalido_retorna_formulario_com_erro(self, cliente_autenticado, cliente_db):
+        response = cliente_autenticado.post(
+            reverse("ticket_create"),
+            {
+                "titulo": "Titulo valido",
+                "cliente_id": str(cliente_db.id),
+                "status": "INVALIDO",
+                "prioridade": "Baixa",
+            },
+        )
+        assert response.status_code == 200
+        assert "Status" in response.content.decode()
+        assert not Ticket.objects.exists()
+
 
 # ---------------------------------------------------------------------------
 # ticket_edit
@@ -190,10 +218,27 @@ class TestTicketEdit:
         ticket_db.refresh_from_db()
         assert ticket_db.cliente_id == cliente_original_id
 
-    def test_ticket_inexistente_redireciona(self, cliente_autenticado, db):
+    def test_post_titulo_vazio_retorna_formulario_com_erro(self, cliente_autenticado, ticket_db):
+        response = cliente_autenticado.post(
+            reverse("ticket_edit", args=[ticket_db.id]),
+            {
+                "titulo": "",
+                "status": "Novo",
+                "prioridade": "Baixa",
+            },
+        )
+        assert response.status_code == 200
+        assert "título" in response.content.decode()
+        ticket_db.refresh_from_db()
+        assert ticket_db.titulo == "Problema no login"  # nao alterado
+
+    def test_ticket_inexistente_redireciona_com_mensagem(self, cliente_autenticado, db):
         from uuid import uuid4
         response = cliente_autenticado.get(reverse("ticket_edit", args=[uuid4()]))
         assert response.status_code == 302
+        # a mensagem de erro e exibida apos o redirecionamento na listagem
+        response_listagem = cliente_autenticado.get(reverse("ticket_list"))
+        assert "não encontrado" in response_listagem.content.decode()
 
 
 # ---------------------------------------------------------------------------

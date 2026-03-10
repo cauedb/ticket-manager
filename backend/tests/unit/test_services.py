@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 
 from tickets.application.services import TicketService
-from tickets.domain.exceptions import ClienteNaoEncontrado, TicketNaoEncontrado
+from tickets.domain.exceptions import ClienteNaoEncontrado, DadosInvalidos, TicketNaoEncontrado
 
 
 def _make_service(mock_ticket_repo=None, mock_cliente_repo=None):
@@ -17,6 +17,48 @@ def _make_service(mock_ticket_repo=None, mock_cliente_repo=None):
     service.tickets = mock_ticket_repo or MagicMock()
     service.clientes = mock_cliente_repo or MagicMock()
     return service
+
+
+# ---------------------------------------------------------------------------
+# Validacao de dados
+# ---------------------------------------------------------------------------
+
+
+class TestValidarDadosTicket:
+    def test_titulo_vazio_lanca_dados_invalidos(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos, match="título"):
+            service._validar_dados_ticket("", "Novo", "Baixa")
+
+    def test_titulo_apenas_espacos_lanca_dados_invalidos(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos, match="título"):
+            service._validar_dados_ticket("   ", "Novo", "Baixa")
+
+    def test_status_invalido_lanca_dados_invalidos(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos, match="Status"):
+            service._validar_dados_ticket("Titulo", "StatusInventado", "Baixa")
+
+    def test_prioridade_invalida_lanca_dados_invalidos(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos, match="Prioridade"):
+            service._validar_dados_ticket("Titulo", "Novo", "PrioridadeInventada")
+
+    def test_dados_validos_nao_lanca_excecao(self):
+        service = _make_service()
+        # nao deve lancar nada
+        service._validar_dados_ticket("Titulo valido", "Novo", "Alta")
+
+    def test_todos_status_validos_sao_aceitos(self):
+        service = _make_service()
+        for status in ("Novo", "Em Andamento", "Resolvido"):
+            service._validar_dados_ticket("Titulo", status, "Baixa")
+
+    def test_todas_prioridades_validas_sao_aceitas(self):
+        service = _make_service()
+        for prioridade in ("Baixa", "Média", "Alta"):
+            service._validar_dados_ticket("Titulo", "Novo", prioridade)
 
 
 # ---------------------------------------------------------------------------
@@ -94,6 +136,25 @@ class TestObterTicket:
 
 
 class TestCriarTicket:
+    def test_lanca_dados_invalidos_para_titulo_vazio(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos):
+            service.criar_ticket(titulo="", cliente_id=uuid4(), status="Novo", prioridade="Baixa")
+
+    def test_lanca_dados_invalidos_para_status_invalido(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos):
+            service.criar_ticket(titulo="Titulo", cliente_id=uuid4(), status="INVALIDO", prioridade="Baixa")
+
+    def test_nao_consulta_repositorio_se_dados_invalidos(self):
+        ticket_repo = MagicMock()
+        cliente_repo = MagicMock()
+        service = _make_service(mock_ticket_repo=ticket_repo, mock_cliente_repo=cliente_repo)
+        with pytest.raises(DadosInvalidos):
+            service.criar_ticket(titulo="", cliente_id=uuid4(), status="Novo", prioridade="Baixa")
+        ticket_repo.create.assert_not_called()
+        cliente_repo.get_by_id.assert_not_called()
+
     def test_cria_ticket_quando_cliente_existe(self):
         cliente_id = uuid4()
         cliente_mock = MagicMock()
@@ -155,6 +216,24 @@ class TestCriarTicket:
 
 
 class TestAtualizarTicket:
+    def test_lanca_dados_invalidos_para_titulo_vazio(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos):
+            service.atualizar_ticket(ticket_id=uuid4(), titulo="", status="Novo", prioridade="Baixa")
+
+    def test_lanca_dados_invalidos_para_prioridade_invalida(self):
+        service = _make_service()
+        with pytest.raises(DadosInvalidos):
+            service.atualizar_ticket(ticket_id=uuid4(), titulo="Titulo", status="Novo", prioridade="INVALIDA")
+
+    def test_nao_consulta_repositorio_se_dados_invalidos(self):
+        ticket_repo = MagicMock()
+        service = _make_service(mock_ticket_repo=ticket_repo)
+        with pytest.raises(DadosInvalidos):
+            service.atualizar_ticket(ticket_id=uuid4(), titulo="", status="Novo", prioridade="Baixa")
+        ticket_repo.get_by_id.assert_not_called()
+        ticket_repo.update.assert_not_called()
+
     def test_atualiza_quando_ticket_existe(self):
         ticket_id = uuid4()
         ticket_mock = MagicMock()

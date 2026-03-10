@@ -14,7 +14,9 @@ from tickets.domain.entities import (
 )
 from tickets.domain.exceptions import (
     ClienteNaoEncontrado,
+    DadosInvalidos,
     EmailJaCadastrado,
+    TicketManagerException,
     TicketNaoEncontrado,
 )
 
@@ -111,14 +113,26 @@ class TestTicketEntity:
 
 
 class TestExcecoes:
-    def test_cliente_nao_encontrado_e_exception(self):
-        assert issubclass(ClienteNaoEncontrado, Exception)
+    def test_ticket_manager_exception_e_base_de_todas(self):
+        assert issubclass(TicketManagerException, Exception)
 
-    def test_ticket_nao_encontrado_e_exception(self):
-        assert issubclass(TicketNaoEncontrado, Exception)
+    def test_cliente_nao_encontrado_herda_da_base(self):
+        assert issubclass(ClienteNaoEncontrado, TicketManagerException)
 
-    def test_email_ja_cadastrado_e_exception(self):
-        assert issubclass(EmailJaCadastrado, Exception)
+    def test_ticket_nao_encontrado_herda_da_base(self):
+        assert issubclass(TicketNaoEncontrado, TicketManagerException)
+
+    def test_email_ja_cadastrado_herda_da_base(self):
+        assert issubclass(EmailJaCadastrado, TicketManagerException)
+
+    def test_dados_invalidos_herda_da_base(self):
+        assert issubclass(DadosInvalidos, TicketManagerException)
+
+    def test_todas_sao_capturadas_pela_base(self):
+        """Garante que um except TicketManagerException captura qualquer erro de dominio."""
+        for exc_class in (ClienteNaoEncontrado, TicketNaoEncontrado, EmailJaCadastrado, DadosInvalidos):
+            with pytest.raises(TicketManagerException):
+                raise exc_class("mensagem de teste")
 
     def test_lancamento_cliente_nao_encontrado(self):
         with pytest.raises(ClienteNaoEncontrado):
@@ -127,3 +141,7 @@ class TestExcecoes:
     def test_lancamento_ticket_nao_encontrado(self):
         with pytest.raises(TicketNaoEncontrado):
             raise TicketNaoEncontrado("Ticket 456 nao encontrado")
+
+    def test_lancamento_dados_invalidos(self):
+        with pytest.raises(DadosInvalidos):
+            raise DadosInvalidos("Titulo nao pode ser vazio")

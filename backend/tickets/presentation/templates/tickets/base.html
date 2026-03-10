@@ -87,7 +87,8 @@
       margin-bottom: 20px;
       font-size: .875rem;
     }
-    .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+    .alert-error   { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+    .alert-success { background: #dcfce7; color: #166534; border-left: 4px solid #16a34a; }
 
     /* ---------- Table ---------- */
     table { width: 100%; border-collapse: collapse; font-size: .875rem; }
@@ -223,6 +224,14 @@
 </header>
 
 <main>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}" style="margin-bottom:16px">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
   {% block content %}{% endblock %}
 </main>
 
