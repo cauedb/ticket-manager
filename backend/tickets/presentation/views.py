@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
@@ -9,12 +10,14 @@ from tickets.infrastructure.models import Ticket
 service = TicketService()
 
 
+@login_required
 @require_GET
 def ticket_list(request):
     tickets = service.listar_tickets()
     return render(request, "tickets/index.html", {"tickets": tickets})
 
 
+@login_required
 @require_GET
 def ticket_detail(request, ticket_id):
     try:
@@ -34,6 +37,7 @@ def ticket_detail(request, ticket_id):
     })
 
 
+@login_required
 def ticket_create(request):
     clientes = service.listar_clientes_ativos()
 
@@ -65,6 +69,7 @@ def ticket_create(request):
     return redirect("ticket_list")
 
 
+@login_required
 def ticket_edit(request, ticket_id):
     try:
         ticket = service.obter_ticket(ticket_id)
@@ -99,6 +104,7 @@ def ticket_edit(request, ticket_id):
     return redirect("ticket_list")
 
 
+@login_required
 @require_POST
 def ticket_delete(request, ticket_id):
     try:
