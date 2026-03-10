@@ -65,6 +65,7 @@ docker-compose up --build -d
 **2. Rode as migracoes:**
 
 ```bash
+docker-compose exec web python manage.py makemigrations tickets
 docker-compose exec web python manage.py migrate
 ```
 
@@ -113,6 +114,7 @@ pip install -r backend/requirements.txt
 
 ```bash
 cd backend
+python manage.py makemigrations tickets
 python manage.py migrate
 ```
 
