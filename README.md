@@ -176,6 +176,52 @@ ticket-manager/
 
 ---
 
+## Testes
+
+O projeto usa **pytest** + **pytest-django**. Os testes estao organizados em duas categorias:
+
+| Categoria | Camada testada | Banco de dados |
+|---|---|---|
+| `tests/unit/` | `domain` (entities) e `application` (services com mocks) | Nao usa |
+| `tests/integration/` | `infrastructure` (repositories) e `presentation` (views HTTP) | SQLite em memoria |
+
+### Executar com Docker
+
+```bash
+# Todos os testes
+docker-compose exec web pytest
+
+# Apenas unitarios (rapidos, sem banco)
+docker-compose exec web pytest tests/unit/
+
+# Apenas integracao
+docker-compose exec web pytest tests/integration/
+
+# Com output detalhado
+docker-compose exec web pytest -v
+
+# Parar no primeiro erro
+docker-compose exec web pytest -x
+```
+
+> **Nota:** e necessario reconstruir a imagem antes de rodar os testes pela primeira vez,
+> pois `pytest` e `pytest-django` foram adicionados ao `requirements.txt`:
+> ```bash
+> docker-compose up --build -d
+> ```
+
+### Executar sem Docker (ambiente local)
+
+```bash
+cd backend
+pytest
+
+# ou com output detalhado
+pytest -v
+```
+
+---
+
 ## Rotas disponiveis
 
 | Metodo | Rota | Descricao |
